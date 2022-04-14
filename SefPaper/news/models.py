@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
-
+from django.db.models import Sum
 
 # Create your models here.
 
@@ -9,13 +9,16 @@ class Author(models.Model):
     authorRate = models.SmallIntegerField(default=0)
 
     def update_rating(self):
-        for self
-        pass
+        postRate = self.post_set.aggregate(postRate = Sum('rating'))
+        defRate = 0
+        defRate += postRate.get('commentRate')
+        commentRate = self.authorUser.comment_set.aggregate(commentRate = Sum('commentRate'))
+        self.authorRate = postRate *3 + commentRate
+        self.save()
 
 
 class Category(models.Model):
     CategoryName = models.CharField(max_length=128, unique=True)
-    pass
 
 
 class Post(models.Model):
@@ -24,13 +27,12 @@ class Post(models.Model):
     NEWS = 'NW'
     ARTICLE = 'AR'
     CATEGORY_CHOICED = (
-        (NEWS, 'Новость')
-        (ARTICLE, 'Статья')
+        (NEWS, 'Новость'),
+        (ARTICLE, 'Статья'),
     )
-
     typePost = models.CharField(max_length=2, choices=CATEGORY_CHOICED)
     daterimePost = models.DateTimeField(auto_now=True)
-    categoryPost = models.ManyToManyField(Category, through='categoryPost')
+    categoryPost = models.ManyToManyField(Category, through='PostCategory')
     title = models.CharField(max_length=128)
     text = models.TextField()
     rating = models.SmallIntegerField(default=0)
@@ -39,17 +41,16 @@ class Post(models.Model):
         self.rating += 1
         self.save()
 
-    def dislige(self):
+    def dislike(self):
         self.rating -= 1
         self.save()
 
     def prewiew(self):
-        self.text[0:123] + '. . .' + str(self.rating)
+        return '{} ... {}'.format(self.text[0:123], str(self.rating))
 
 class PostCategory(models.Model):
     postThrough = models.ForeignKey(Post, on_delete=models.CASCADE)
     categoryThrough = models.ForeignKey(Category, on_delete=models.CASCADE)
-    pass
 
 
 class Comment(models.Model):
@@ -63,6 +64,6 @@ class Comment(models.Model):
         self.commentRate += 1
         self.save()
 
-    def dislige(self):
+    def dislike(self):
         self.commentRate -= 1
         self.save()
